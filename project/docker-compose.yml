@@ -1,0 +1,95 @@
+version: "3"
+
+services:
+  auth:
+    build:
+      context: ./../auth
+      dockerfile: ./../auth/build/Dockerfile
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: mysql_database:3306
+      TOKEN_SECRET: ${TOKEN_SECRET}
+    networks:
+      - app-network
+
+  transaction:
+    build:
+      context: ./../transaction
+      dockerfile: ./../transaction/build/Dockerfile
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      TRANSACTION_DB_USER: ${TRANSACTION_DB_USER}
+      TRANSACTION_DB_PASSWORD: ${TRANSACTION_DB_PASSWORD}
+      TRANSACTION_DB_HOST: mysql_transaction_database:3306
+    networks:
+      - transaction-network
+    depends_on:
+      - mysql_transaction_database
+
+  mysql_database:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: "auth"
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database-data/mysql:/var/lib/mysql
+    networks:
+      - app-network
+  
+  mysql_transaction_database:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: "transaction"
+      MYSQL_USER: ${TRANSACTION_DB_USER}
+      MYSQL_PASSWORD: ${TRANSACTION_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${TRANSACTION_DB_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./database-data/mysql-transaction:/var/lib/mysql
+    networks:
+      - transaction-network
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    restart: always
+    environment:
+      PMA_HOST: mysql_database
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - '8079:80'
+    networks:
+      - app-network
+    depends_on:
+      - mysql_database
+
+  phpmyadmin_transaction:
+    image: phpmyadmin/phpmyadmin:latest
+    restart: always
+    environment:
+      PMA_HOST: mysql_transaction_database
+      MYSQL_ROOT_PASSWORD: ${TRANSACTION_DB_PASSWORD}
+    ports:
+      - '8078:80'
+    networks:
+      - transaction-network
+    depends_on:
+      - mysql_transaction_database
+
+networks:
+  app-network:
+    driver: bridge
+  transaction-network:
+    driver: bridge
