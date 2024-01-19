@@ -22,27 +22,5 @@ func (c *Config) routes() http.Handler {
 
 	mux.Use(middleware.Heartbeat("/ping"))
 	mux.Use(middleware.DefaultLogger)
-
-	mux.Route("/v1/auth", func(r chi.Router) {
-		// token authentications
-		r.Post("/signup", c.Signup)
-		r.Post("/login", c.Login)
-		r.Post("/refresh", c.Refresh)
-
-		// crud routes
-		r.Mount("/crud", c.crudRoutes())
-	})
-
-	return mux
-}
-
-
-// this function return all the routes that need to validade the token "Authorization:'Bearer token'"
-func (c *Config) crudRoutes() http.Handler {
-	mux := chi.NewRouter()
-	mux.Use(middleware.DefaultLogger)
-	//validation middleware below
-	mux.Use(c.AuthMiddleware)
-	mux.Patch("/update/{user_id}", c.UpdateUser)
 	return mux
 }
