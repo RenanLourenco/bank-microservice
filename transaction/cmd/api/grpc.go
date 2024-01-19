@@ -121,6 +121,51 @@ func (t *TransactionServer) CreateBalance(ctx context.Context, req *transactions
 	}, nil
 }
 
+func (t *TransactionServer) Deposit(ctx context.Context, req *transactions_proto.DepositRequest) (*transactions_proto.DepositResponse, error) {
+	input := req.GetDeposit()
+
+	findUserBalance, err := t.db.FindBalanceByUserId(ctx, input.UserId)
+	if err != nil {
+		return &transactions_proto.DepositResponse{
+			Success: false,
+			Result: "User balance not found.",
+		}, errors.New("User balance not found.")
+	}
+
+	userFloatBalance, err := strconv.ParseFloat(findUserBalance.Balance.String, 64) 
+	if err != nil {
+		return &transactions_proto.DepositResponse{
+			Success: false,
+			Result: "Error converting balance to float.",
+		}, errors.New("Error converting balance to float.")
+	}
+
+
+	newBalance := userFloatBalance + float64(input.Value)
+
+	err = t.db.UpdateBalance(ctx, db.UpdateBalanceParams{
+		Balance: sql.NullString{
+			String: fmt.Sprintf("%f",newBalance),
+			Valid: true,
+		},
+		UserID: input.UserId,
+	})
+
+	if err != nil {
+		return &transactions_proto.DepositResponse{
+			Success: false,
+			Result: "Error updating user balance.",
+		}, errors.New("Error updating user balance.")
+	}
+
+
+	return &transactions_proto.DepositResponse{
+		Success: true,
+		Result: "Deposit succeded",
+	}, nil
+
+}
+
 func (t *TransactionServer) VerifyIfUserValidForTransaction(ctx context.Context, req *transactions_proto.VerifyIfUserValidForTransactionRequest) (*transactions_proto.VerifyIfUserValidForTransactionResponse, error){
 	input := req.GetVerifyIfUserValid()
 	floatInputValue := float64(input.ValueTransaction)
@@ -133,7 +178,7 @@ func (t *TransactionServer) VerifyIfUserValidForTransaction(ctx context.Context,
 			Result: "Failed to find balance of sender user",
 		}, errors.New("Failed to find balance of sender user")
 	}
-	toUserBalance, err := t.db.FindBalanceByUserId(ctx, int32(input.FromUserId))
+	toUserBalance, err := t.db.FindBalanceByUserId(ctx, int32(input.ToUserId))
 	if err != nil || toUserBalance.ID == 0{
 		return &transactions_proto.VerifyIfUserValidForTransactionResponse{
 			Success: false,
@@ -158,3 +203,22 @@ func (t *TransactionServer) VerifyIfUserValidForTransaction(ctx context.Context,
 		Result: "Validated",
 	}, nil
 }
+
+func (t *TransactionServer) VerifyIfUserValidForDeposit(ctx context.Context, req *transactions_proto.VerifyIfUserValidForDepositRequest) (*transactions_proto.VerifyIfUserValidForDepositResponse, error) {
+	input := req.GetVerifyIfUserValidforDeposit()
+
+	user, err := t.db.FindBalanceByUserId(ctx, input.UserId)
+
+	if err != nil || user.ID == 0 {
+		return &transactions_proto.VerifyIfUserValidForDepositResponse{
+			Success: false,
+			Result: "User balance not found.",
+		}, errors.New("User balance not found.")
+	}
+
+	return &transactions_proto.VerifyIfUserValidForDepositResponse{
+		Success: true,
+		Result: "Valid for deposit",
+	}, nil
+}
+

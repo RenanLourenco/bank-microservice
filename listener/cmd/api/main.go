@@ -43,6 +43,9 @@ func main() {
 		log.Println(err)
 	}
 
+	//deposit queue
+	go consumer.ListenDeposit([]string{"deposit.INFO", "deposit.WARNING", "deposit.ERROR"})
+
 	// transaction queue
 	err = consumer.ListenTransaction([]string{"transaction.INFO", "transaction.WARNING", "transaction.ERROR"})
 

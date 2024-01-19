@@ -22,6 +22,11 @@ type CreateTransactionPayload struct {
 	ToUserId   int     `json:"to_user_id"`
 }
 
+type DepositPayload struct {
+	UserId int `json:"user_id"`
+	Value float64 `json:"value"`
+}
+
 type SignupPayload struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
@@ -53,12 +58,7 @@ func (c *Config) HandleCreateTransaction(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	//validating if user is valid to do a transaction
-
-	fmt.Println(responsePayload)
-
 	_, err = validateTransaction(&responsePayload)
-
-	fmt.Println("passou validação")
 
 	if err != nil {
 		c.errorJSON(w, err)
@@ -79,6 +79,40 @@ func (c *Config) HandleCreateTransaction(w http.ResponseWriter, r *http.Request)
 	var payload jsonResponse
 	payload.Error = false
 	payload.Message = "Created transaction"
+
+	c.writeJSON(w, http.StatusAccepted, payload)
+
+}
+
+func (c *Config) HandleDeposit(w http.ResponseWriter, r *http.Request) {
+	var responsePayload DepositPayload
+	err := c.readJSON(w, r, &responsePayload)
+	if err != nil {
+		c.errorJSON(w, err)
+		return
+	}
+	//validating if user is valid to do a transaction
+	_, err = validateDeposit(&responsePayload)
+
+	if err != nil {
+		c.errorJSON(w, err)
+		return
+	}
+
+	err = c.pushToQueue(
+		"deposit_queue",
+		"deposit_topic",
+		"deposit.INFO",
+		responsePayload,
+	)
+	if err != nil {
+		c.errorJSON(w, err)
+		return
+	}
+
+	var payload jsonResponse
+	payload.Error = false
+	payload.Message = "Deposit send"
 
 	c.writeJSON(w, http.StatusAccepted, payload)
 
@@ -105,6 +139,37 @@ func validateTransaction(payload *CreateTransactionPayload) (bool, error) {
 			ValueTransaction: float32(payload.Value),
 			FromUserId: int32(payload.FromUserId),
 			ToUserId: int32(payload.ToUserId),
+		},
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+
+}
+
+func validateDeposit(payload *DepositPayload) (bool, error) {
+	conn, err := grpc.Dial("transaction:50001", grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	defer conn.Close()
+
+	fmt.Println(payload)
+
+	if err != nil {
+		return false, errors.New("Failed to connect gRPC transaction server")
+	}
+	log.Println("Transaction gRPC server connected")
+
+	client := transactions_proto.NewTransactionServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	log.Println("Sending to validate the deposit")
+
+	_, err = client.VerifyIfUserValidForDeposit(ctx, &transactions_proto.VerifyIfUserValidForDepositRequest{
+		VerifyIfUserValidforDeposit: &transactions_proto.VerifyIfUserValidForDeposit{
+			UserId: int32(payload.UserId),
 		},
 	})
 
@@ -196,15 +261,15 @@ func (c *Config) HandlerLogin(w http.ResponseWriter, r *http.Request){
 		},
 	})
 
+	if err != nil {
+		c.errorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
 	if resp.Error == true {
 		formattedError := fmt.Sprintf("Received error from authentication: %s", resp.Message)
 
 		c.errorJSON(w, errors.New(formattedError), http.StatusUnauthorized)
-		return
-	}
-
-	if err != nil {
-		c.errorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -242,15 +307,15 @@ func (c *Config) HandlerRefresh(w http.ResponseWriter, r *http.Request){
 		},
 	})
 
+	if err != nil {
+		c.errorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
 	if resp.Error == true {
 		formattedError := fmt.Sprintf("Received error from authentication: %s", resp.Message)
 
 		c.errorJSON(w, errors.New(formattedError), http.StatusUnauthorized)
-		return
-	}
-
-	if err != nil {
-		c.errorJSON(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -302,6 +367,11 @@ func (c *Config) HandlerUpdateUser(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
+	if err != nil {
+		c.errorJSON(w, err, http.StatusBadRequest)
+		return
+	}
+
 	if resp.Error == true {
 		formattedError := fmt.Sprintf("Received error from authentication: %s", resp.Message)
 
@@ -309,10 +379,7 @@ func (c *Config) HandlerUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err != nil {
-		c.errorJSON(w, err, http.StatusBadRequest)
-		return
-	}
+
 
 	c.writeJSON(w, http.StatusOK, resp)
 

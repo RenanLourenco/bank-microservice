@@ -25,6 +25,8 @@ type TransactionServiceClient interface {
 	CreateTransaction(ctx context.Context, in *TransactionRequest, opts ...grpc.CallOption) (*TransactionResponse, error)
 	CreateBalance(ctx context.Context, in *BalanceRequest, opts ...grpc.CallOption) (*BalanceResponse, error)
 	VerifyIfUserValidForTransaction(ctx context.Context, in *VerifyIfUserValidForTransactionRequest, opts ...grpc.CallOption) (*VerifyIfUserValidForTransactionResponse, error)
+	VerifyIfUserValidForDeposit(ctx context.Context, in *VerifyIfUserValidForDepositRequest, opts ...grpc.CallOption) (*VerifyIfUserValidForDepositResponse, error)
+	Deposit(ctx context.Context, in *DepositRequest, opts ...grpc.CallOption) (*DepositResponse, error)
 }
 
 type transactionServiceClient struct {
@@ -62,6 +64,24 @@ func (c *transactionServiceClient) VerifyIfUserValidForTransaction(ctx context.C
 	return out, nil
 }
 
+func (c *transactionServiceClient) VerifyIfUserValidForDeposit(ctx context.Context, in *VerifyIfUserValidForDepositRequest, opts ...grpc.CallOption) (*VerifyIfUserValidForDepositResponse, error) {
+	out := new(VerifyIfUserValidForDepositResponse)
+	err := c.cc.Invoke(ctx, "/transactions.TransactionService/VerifyIfUserValidForDeposit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *transactionServiceClient) Deposit(ctx context.Context, in *DepositRequest, opts ...grpc.CallOption) (*DepositResponse, error) {
+	out := new(DepositResponse)
+	err := c.cc.Invoke(ctx, "/transactions.TransactionService/Deposit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TransactionServiceServer is the server API for TransactionService service.
 // All implementations must embed UnimplementedTransactionServiceServer
 // for forward compatibility
@@ -69,6 +89,8 @@ type TransactionServiceServer interface {
 	CreateTransaction(context.Context, *TransactionRequest) (*TransactionResponse, error)
 	CreateBalance(context.Context, *BalanceRequest) (*BalanceResponse, error)
 	VerifyIfUserValidForTransaction(context.Context, *VerifyIfUserValidForTransactionRequest) (*VerifyIfUserValidForTransactionResponse, error)
+	VerifyIfUserValidForDeposit(context.Context, *VerifyIfUserValidForDepositRequest) (*VerifyIfUserValidForDepositResponse, error)
+	Deposit(context.Context, *DepositRequest) (*DepositResponse, error)
 	mustEmbedUnimplementedTransactionServiceServer()
 }
 
@@ -84,6 +106,12 @@ func (UnimplementedTransactionServiceServer) CreateBalance(context.Context, *Bal
 }
 func (UnimplementedTransactionServiceServer) VerifyIfUserValidForTransaction(context.Context, *VerifyIfUserValidForTransactionRequest) (*VerifyIfUserValidForTransactionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyIfUserValidForTransaction not implemented")
+}
+func (UnimplementedTransactionServiceServer) VerifyIfUserValidForDeposit(context.Context, *VerifyIfUserValidForDepositRequest) (*VerifyIfUserValidForDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyIfUserValidForDeposit not implemented")
+}
+func (UnimplementedTransactionServiceServer) Deposit(context.Context, *DepositRequest) (*DepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
 }
 func (UnimplementedTransactionServiceServer) mustEmbedUnimplementedTransactionServiceServer() {}
 
@@ -152,6 +180,42 @@ func _TransactionService_VerifyIfUserValidForTransaction_Handler(srv interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TransactionService_VerifyIfUserValidForDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyIfUserValidForDepositRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TransactionServiceServer).VerifyIfUserValidForDeposit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/transactions.TransactionService/VerifyIfUserValidForDeposit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TransactionServiceServer).VerifyIfUserValidForDeposit(ctx, req.(*VerifyIfUserValidForDepositRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TransactionService_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DepositRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TransactionServiceServer).Deposit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/transactions.TransactionService/Deposit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TransactionServiceServer).Deposit(ctx, req.(*DepositRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TransactionService_ServiceDesc is the grpc.ServiceDesc for TransactionService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -170,6 +234,14 @@ var TransactionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyIfUserValidForTransaction",
 			Handler:    _TransactionService_VerifyIfUserValidForTransaction_Handler,
+		},
+		{
+			MethodName: "VerifyIfUserValidForDeposit",
+			Handler:    _TransactionService_VerifyIfUserValidForDeposit_Handler,
+		},
+		{
+			MethodName: "Deposit",
+			Handler:    _TransactionService_Deposit_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

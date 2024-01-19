@@ -48,9 +48,40 @@ message VerifyIfUserValidForTransactionResponse{
     string result = 2;
 }
 
+message VerifyIfUserValidForDeposit{
+    int32 user_id = 1;
+}
+
+message VerifyIfUserValidForDepositRequest{
+    VerifyIfUserValidForDeposit verifyIfUserValidforDeposit = 1;
+}
+
+message VerifyIfUserValidForDepositResponse{
+    bool success = 1;
+    string result = 2;
+}
+
+
+message Deposit{
+    int32 user_id = 1;
+    float value = 2;
+}
+
+message DepositRequest{
+    Deposit deposit = 1;
+}
+
+message DepositResponse{
+    bool success = 1;
+    string result = 2;
+}
+
+
 service TransactionService {
     rpc CreateTransaction(TransactionRequest) returns (TransactionResponse);
     rpc CreateBalance(BalanceRequest) returns (BalanceResponse);
     rpc VerifyIfUserValidForTransaction(VerifyIfUserValidForTransactionRequest) returns (VerifyIfUserValidForTransactionResponse);
+    rpc VerifyIfUserValidForDeposit (VerifyIfUserValidForDepositRequest) returns (VerifyIfUserValidForDepositResponse);
+    rpc Deposit(DepositRequest) returns (DepositResponse);
 }
 

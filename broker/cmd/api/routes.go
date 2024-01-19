@@ -44,6 +44,7 @@ func (c *Config) transactionRoutes() http.Handler {
 	//validation middleware below
 	mux.Use(c.AuthMiddleware)
 	mux.Post("/", c.HandleCreateTransaction)
+	mux.Post("/deposit", c.HandleDeposit)
 	return mux
 }
 

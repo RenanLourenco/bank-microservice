@@ -39,6 +39,21 @@ func declareExchange(ch *amqp.Channel) error {
 		return errExchangeTransaction
 	}
 
+	errExchangeDeposit := ch.ExchangeDeclare(
+		"deposit_topic",
+		"topic",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	if errExchangeDeposit != nil {
+		log.Println("Error exchanging deposit")
+		return errExchangeDeposit
+	}
+
 	return nil
 }
 
@@ -75,3 +90,13 @@ func declareTransactionQueue(ch *amqp.Channel) (amqp.Queue, error) {
 	)
 }
 
+func declareDepositQueue(ch *amqp.Channel) (amqp.Queue, error) {
+	return ch.QueueDeclare(
+		"deposit_queue",
+		false,
+		false,
+		true,
+		false,
+		nil,
+	)
+}
