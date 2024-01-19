@@ -1,5 +1,6 @@
 AUTH_BINARY=authApp
 TRANS_BINARY=transactionApp
+LIS_BINARY=listenerApp
 
 export DB_USER=renan
 export DB_PASSWORD=admin123
@@ -19,7 +20,7 @@ down:
 	docker compose down
 	@echo "Done!"
 
-up_build: build_auth
+up_build: build_auth build_listener build_transaction
 	@echo "Stopping docker images (if running...)"
 	docker compose down
 	@echo "Building (when required) and starting docker images..."
@@ -34,4 +35,9 @@ build_auth:
 build_transaction:
 	@echo "Building transaction service image.."
 	cd ../transaction && env GOOS=linux CGO_ENABLED=0 go build -o ${TRANS_BINARY} ./cmd/api
+	@echo "Done!"
+
+build_listener:
+	@echo "Building listener service image.."
+	cd ../listener && env GOOS=linux CGO_ENABLED=0 go build -o ${LIS_BINARY} ./cmd/api
 	@echo "Done!"

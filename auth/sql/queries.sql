@@ -1,8 +1,8 @@
 -- name: CreateNaturalUser :exec
-INSERT INTO users (name, email, password, balance, cpf, user_type) VALUES(?,?,?,?,?,?);
+INSERT INTO users (name, email, password, cpf, user_type) VALUES(?,?,?,?,?);
 
 -- name: CreateLegalUser :exec
-INSERT INTO users (name, email, password, balance, cnpj, user_type) VALUES(?,?,?,?,?,?);
+INSERT INTO users (name, email, password, cnpj, user_type) VALUES(?,?,?,?,?);
 
 -- name: FindUserById :one
 SELECT * FROM users WHERE id = ?;

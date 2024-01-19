@@ -59,10 +59,6 @@ func (c *Config) Signup(w http.ResponseWriter, r *http.Request) {
 			Name:     request_payload.Name,
 			Email:    request_payload.Email,
 			Password: string(hash),
-			Balance: sql.NullString{
-				Valid: true,
-				String: "0",
-			},
 			Cpf: sql.NullString{
 				String: request_payload.CPF,
 				Valid:  true,

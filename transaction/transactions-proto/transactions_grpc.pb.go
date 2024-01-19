@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type TransactionServiceClient interface {
 	CreateTransaction(ctx context.Context, in *TransactionRequest, opts ...grpc.CallOption) (*TransactionResponse, error)
 	CreateBalance(ctx context.Context, in *BalanceRequest, opts ...grpc.CallOption) (*BalanceResponse, error)
+	VerifyIfUserValidForTransaction(ctx context.Context, in *VerifyIfUserValidForTransactionRequest, opts ...grpc.CallOption) (*VerifyIfUserValidForTransactionResponse, error)
 }
 
 type transactionServiceClient struct {
@@ -52,12 +53,22 @@ func (c *transactionServiceClient) CreateBalance(ctx context.Context, in *Balanc
 	return out, nil
 }
 
+func (c *transactionServiceClient) VerifyIfUserValidForTransaction(ctx context.Context, in *VerifyIfUserValidForTransactionRequest, opts ...grpc.CallOption) (*VerifyIfUserValidForTransactionResponse, error) {
+	out := new(VerifyIfUserValidForTransactionResponse)
+	err := c.cc.Invoke(ctx, "/transactions.TransactionService/VerifyIfUserValidForTransaction", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TransactionServiceServer is the server API for TransactionService service.
 // All implementations must embed UnimplementedTransactionServiceServer
 // for forward compatibility
 type TransactionServiceServer interface {
 	CreateTransaction(context.Context, *TransactionRequest) (*TransactionResponse, error)
 	CreateBalance(context.Context, *BalanceRequest) (*BalanceResponse, error)
+	VerifyIfUserValidForTransaction(context.Context, *VerifyIfUserValidForTransactionRequest) (*VerifyIfUserValidForTransactionResponse, error)
 	mustEmbedUnimplementedTransactionServiceServer()
 }
 
@@ -70,6 +81,9 @@ func (UnimplementedTransactionServiceServer) CreateTransaction(context.Context, 
 }
 func (UnimplementedTransactionServiceServer) CreateBalance(context.Context, *BalanceRequest) (*BalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBalance not implemented")
+}
+func (UnimplementedTransactionServiceServer) VerifyIfUserValidForTransaction(context.Context, *VerifyIfUserValidForTransactionRequest) (*VerifyIfUserValidForTransactionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyIfUserValidForTransaction not implemented")
 }
 func (UnimplementedTransactionServiceServer) mustEmbedUnimplementedTransactionServiceServer() {}
 
@@ -120,6 +134,24 @@ func _TransactionService_CreateBalance_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TransactionService_VerifyIfUserValidForTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyIfUserValidForTransactionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TransactionServiceServer).VerifyIfUserValidForTransaction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/transactions.TransactionService/VerifyIfUserValidForTransaction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TransactionServiceServer).VerifyIfUserValidForTransaction(ctx, req.(*VerifyIfUserValidForTransactionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TransactionService_ServiceDesc is the grpc.ServiceDesc for TransactionService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +166,10 @@ var TransactionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateBalance",
 			Handler:    _TransactionService_CreateBalance_Handler,
+		},
+		{
+			MethodName: "VerifyIfUserValidForTransaction",
+			Handler:    _TransactionService_VerifyIfUserValidForTransaction_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

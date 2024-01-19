@@ -57,7 +57,6 @@ type User struct {
 	Name      string
 	Email     string
 	Password  string
-	Balance   sql.NullString
 	Cpf       sql.NullString
 	Cnpj      sql.NullString
 	CreatedAt sql.NullTime

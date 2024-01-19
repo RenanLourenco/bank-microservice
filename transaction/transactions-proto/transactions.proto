@@ -33,8 +33,24 @@ message BalanceResponse{
     string result = 2;
 }
 
+message VerifyIfUserValidForTransaction{
+    float value_transaction = 1;
+    int32 from_user_id = 2;
+    int32 to_user_id = 3;
+}
+
+message VerifyIfUserValidForTransactionRequest{
+    VerifyIfUserValidForTransaction verifyIfUserValid = 1;
+}
+
+message VerifyIfUserValidForTransactionResponse{
+    bool success = 1;
+    string result = 2;
+}
+
 service TransactionService {
     rpc CreateTransaction(TransactionRequest) returns (TransactionResponse);
     rpc CreateBalance(BalanceRequest) returns (BalanceResponse);
+    rpc VerifyIfUserValidForTransaction(VerifyIfUserValidForTransactionRequest) returns (VerifyIfUserValidForTransactionResponse);
 }
 

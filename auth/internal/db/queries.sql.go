@@ -11,14 +11,13 @@ import (
 )
 
 const createLegalUser = `-- name: CreateLegalUser :exec
-INSERT INTO users (name, email, password, balance, cnpj, user_type) VALUES(?,?,?,?,?,?)
+INSERT INTO users (name, email, password, cnpj, user_type) VALUES(?,?,?,?,?)
 `
 
 type CreateLegalUserParams struct {
 	Name     string
 	Email    string
 	Password string
-	Balance  sql.NullString
 	Cnpj     sql.NullString
 	UserType UsersUserType
 }
@@ -28,7 +27,6 @@ func (q *Queries) CreateLegalUser(ctx context.Context, arg CreateLegalUserParams
 		arg.Name,
 		arg.Email,
 		arg.Password,
-		arg.Balance,
 		arg.Cnpj,
 		arg.UserType,
 	)
@@ -36,14 +34,13 @@ func (q *Queries) CreateLegalUser(ctx context.Context, arg CreateLegalUserParams
 }
 
 const createNaturalUser = `-- name: CreateNaturalUser :exec
-INSERT INTO users (name, email, password, balance, cpf, user_type) VALUES(?,?,?,?,?,?)
+INSERT INTO users (name, email, password, cpf, user_type) VALUES(?,?,?,?,?)
 `
 
 type CreateNaturalUserParams struct {
 	Name     string
 	Email    string
 	Password string
-	Balance  sql.NullString
 	Cpf      sql.NullString
 	UserType UsersUserType
 }
@@ -53,7 +50,6 @@ func (q *Queries) CreateNaturalUser(ctx context.Context, arg CreateNaturalUserPa
 		arg.Name,
 		arg.Email,
 		arg.Password,
-		arg.Balance,
 		arg.Cpf,
 		arg.UserType,
 	)
@@ -61,7 +57,7 @@ func (q *Queries) CreateNaturalUser(ctx context.Context, arg CreateNaturalUserPa
 }
 
 const findLegalUser = `-- name: FindLegalUser :one
-SELECT id, name, email, password, balance, cpf, cnpj, created_at, updated_at, user_type FROM users WHERE cnpj = ?
+SELECT id, name, email, password, cpf, cnpj, created_at, updated_at, user_type FROM users WHERE cnpj = ?
 `
 
 func (q *Queries) FindLegalUser(ctx context.Context, cnpj sql.NullString) (User, error) {
@@ -72,7 +68,6 @@ func (q *Queries) FindLegalUser(ctx context.Context, cnpj sql.NullString) (User,
 		&i.Name,
 		&i.Email,
 		&i.Password,
-		&i.Balance,
 		&i.Cpf,
 		&i.Cnpj,
 		&i.CreatedAt,
@@ -83,7 +78,7 @@ func (q *Queries) FindLegalUser(ctx context.Context, cnpj sql.NullString) (User,
 }
 
 const findNaturalUser = `-- name: FindNaturalUser :one
-SELECT id, name, email, password, balance, cpf, cnpj, created_at, updated_at, user_type FROM users WHERE cpf = ?
+SELECT id, name, email, password, cpf, cnpj, created_at, updated_at, user_type FROM users WHERE cpf = ?
 `
 
 func (q *Queries) FindNaturalUser(ctx context.Context, cpf sql.NullString) (User, error) {
@@ -94,7 +89,6 @@ func (q *Queries) FindNaturalUser(ctx context.Context, cpf sql.NullString) (User
 		&i.Name,
 		&i.Email,
 		&i.Password,
-		&i.Balance,
 		&i.Cpf,
 		&i.Cnpj,
 		&i.CreatedAt,
@@ -105,7 +99,7 @@ func (q *Queries) FindNaturalUser(ctx context.Context, cpf sql.NullString) (User
 }
 
 const findUserByEmail = `-- name: FindUserByEmail :one
-SELECT id, name, email, password, balance, cpf, cnpj, created_at, updated_at, user_type FROM users WHERE email = ?
+SELECT id, name, email, password, cpf, cnpj, created_at, updated_at, user_type FROM users WHERE email = ?
 `
 
 func (q *Queries) FindUserByEmail(ctx context.Context, email string) (User, error) {
@@ -116,7 +110,6 @@ func (q *Queries) FindUserByEmail(ctx context.Context, email string) (User, erro
 		&i.Name,
 		&i.Email,
 		&i.Password,
-		&i.Balance,
 		&i.Cpf,
 		&i.Cnpj,
 		&i.CreatedAt,
@@ -127,7 +120,7 @@ func (q *Queries) FindUserByEmail(ctx context.Context, email string) (User, erro
 }
 
 const findUserById = `-- name: FindUserById :one
-SELECT id, name, email, password, balance, cpf, cnpj, created_at, updated_at, user_type FROM users WHERE id = ?
+SELECT id, name, email, password, cpf, cnpj, created_at, updated_at, user_type FROM users WHERE id = ?
 `
 
 func (q *Queries) FindUserById(ctx context.Context, id int32) (User, error) {
@@ -138,7 +131,6 @@ func (q *Queries) FindUserById(ctx context.Context, id int32) (User, error) {
 		&i.Name,
 		&i.Email,
 		&i.Password,
-		&i.Balance,
 		&i.Cpf,
 		&i.Cnpj,
 		&i.CreatedAt,

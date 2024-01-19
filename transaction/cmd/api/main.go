@@ -59,7 +59,7 @@ func buildConnectionString() string {
 	dbName := "transaction"
 	host := os.Getenv("TRANSACTION_DB_HOST")
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s", user, password, host, dbName)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", user, password, host, dbName)
 
 	fmt.Println(dsn)
 

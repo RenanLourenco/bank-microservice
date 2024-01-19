@@ -4,14 +4,19 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
+	"net"
 	"os"
 
+	auth_proto "github.com/RenanLourenco/authentication-service/internal/auth-proto"
 	"github.com/RenanLourenco/authentication-service/internal/db"
 	_ "github.com/go-sql-driver/mysql"
+	"google.golang.org/grpc"
 )
 
-const port = "80"
+const (
+	port = "80"
+	gRpcPort = "50002"
+)
 
 type Config struct {
 	db *db.Queries
@@ -29,16 +34,11 @@ func main() {
 
 	db := db.New(dbConn)
 
-	app := Config{
+	app := &Config{
 		db: db,
 	}
 
-	server := &http.Server{
-		Addr:    fmt.Sprintf(":%s", port),
-		Handler: app.routes(),
-	}
-	log.Println("Server running in port: ", port)
-	err = server.ListenAndServe()
+	app.gRPCListen()
 
 	if err != nil {
 		log.Println("Unable start the server")
@@ -58,4 +58,23 @@ func buildConnectionString() string {
 	fmt.Println(dsn)
 
 	return dsn
+}
+
+func (c *Config) gRPCListen() {
+	listen, err := net.Listen("tcp", fmt.Sprintf(":%s", gRpcPort))
+	if err != nil {
+		log.Fatalf("Failed to listen for gRPC: %v", err)
+	}
+
+	srv := grpc.NewServer()
+
+	auth_proto.RegisterAuthServiceServer(srv, &AuthServer{
+		db: c.db,
+	})
+
+	log.Printf("gRPC server started on port %s", gRpcPort)
+
+	if err := srv.Serve(listen); err != nil {
+		log.Fatalf("Failed to listen for gRPC: %v", err)
+	}
 }

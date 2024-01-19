@@ -6,16 +6,23 @@ services:
       context: ./../auth
       dockerfile: ./../auth/build/Dockerfile
     restart: always
-    ports:
-      - "8080:80"
     environment:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: mysql_database:3306
       TOKEN_SECRET: ${TOKEN_SECRET}
-    networks:
-      - app-network
-
+  listener:
+    build:
+      context: ./../listener
+      dockerfile: ./../listener/build/Dockerfile
+    restart: always
+  broker:
+    build:
+      context: ./../broker
+      dockerfile: ./../broker/build/Dockerfile
+    restart: always
+    ports:
+      - "8082:80"
   transaction:
     build:
       context: ./../transaction
@@ -27,10 +34,7 @@ services:
       TRANSACTION_DB_USER: ${TRANSACTION_DB_USER}
       TRANSACTION_DB_PASSWORD: ${TRANSACTION_DB_PASSWORD}
       TRANSACTION_DB_HOST: mysql_transaction_database:3306
-    networks:
-      - transaction-network
-    depends_on:
-      - mysql_transaction_database
+
 
   mysql_database:
     image: mysql:5.7
@@ -44,8 +48,6 @@ services:
       - "3306:3306"
     volumes:
       - ./database-data/mysql:/var/lib/mysql
-    networks:
-      - app-network
   
   mysql_transaction_database:
     image: mysql:5.7
@@ -59,8 +61,6 @@ services:
       - "3307:3306"
     volumes:
       - ./database-data/mysql-transaction:/var/lib/mysql
-    networks:
-      - transaction-network
   
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -70,10 +70,6 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
       - '8079:80'
-    networks:
-      - app-network
-    depends_on:
-      - mysql_database
 
   phpmyadmin_transaction:
     image: phpmyadmin/phpmyadmin:latest
@@ -83,13 +79,19 @@ services:
       MYSQL_ROOT_PASSWORD: ${TRANSACTION_DB_PASSWORD}
     ports:
       - '8078:80'
-    networks:
-      - transaction-network
     depends_on:
       - mysql_transaction_database
 
-networks:
-  app-network:
-    driver: bridge
-  transaction-network:
-    driver: bridge
+  rabbitmq:
+    image: 'rabbitmq:management'
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+     - ./database-data/rabbitmq/:/var/lib/rabbitmq/  
